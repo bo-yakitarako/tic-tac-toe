@@ -53,7 +53,7 @@ describe('extractIndexes', () => {
 type JudgeResult = Exclude<ReturnType<typeof judge>, null>;
 
 describe('judge', () => {
-  test('何も揃ってなくて続く場合', () => {
+  test('何も揃ってない場合', () => {
     const areas: Area[] = [
       [0, 0, 0, 0, 0, 0, 0, 0, 0],
       [1, 0, 2, 1, 2, 1, 0, 2, 0],
