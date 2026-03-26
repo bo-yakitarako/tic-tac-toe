@@ -1,0 +1,8 @@
+services:
+  tic-tac-toe-bot:
+    build: .
+    container_name: tic-tac-toe-bot
+    restart: always
+    environment:
+      TOKEN: ${TOKEN}
+      CLIENT_ID: ${CLIENT_ID}

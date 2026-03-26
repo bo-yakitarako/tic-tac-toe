@@ -1,0 +1,8 @@
+/dist
+*.code-workspace
+/.vscode/sftp.json
+.env.keys
+.env.local
+node_modules
+holidays.json
+test_calendar.png

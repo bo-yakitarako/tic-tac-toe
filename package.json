@@ -1,0 +1,22 @@
+{
+  "name": "tic-tac-toe-bot",
+  "version": "1.0.0",
+  "description": "ミッフィーちゃんのお口",
+  "license": "MIT",
+  "author": "bo-yakitarako",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "dotenvx run -- bun dist/index.js",
+    "delete": "dotenvx run -- bun src/commandDelete.ts",
+    "dev": "dotenvx run -- bun run --hot src/main.ts",
+    "lint": "oxlint --fix && oxfmt --write src",
+    "build": "bun build src/main.ts --target bun --minify --outfile dist/index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.42.0",
+    "oxlint": "latest"
+  }
+}
