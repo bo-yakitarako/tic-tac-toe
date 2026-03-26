@@ -25,4 +25,6 @@ export const game = {
 
 const flags = MessageFlags.Ephemeral;
 
+export type Area = (0 | 1 | 2)[]; // 0: まだ置かれてない, 1: 先手(〇), 2: 後手(×)
+
 export class TicTacToe {}
