@@ -1,3 +1,4 @@
+import { game, TicTacToe } from '@/TicTacToe';
 import {
   ChatInputCommandInteraction,
   MessageFlags,
@@ -8,10 +9,21 @@ import {
 const flags = MessageFlags.Ephemeral;
 
 const registration = {
-  test: {
-    data: new SlashCommandBuilder().setName('test').setDescription('てすと'),
+  marubatsu: {
+    data: new SlashCommandBuilder().setName('marubatsu').setDescription('マルバツゲームしようぜ'),
     execute: async (interaction: ChatInputCommandInteraction) => {
-      await interaction.reply('テスト');
+      const ticTacToe = game.create(interaction);
+      if (ticTacToe === null) {
+        await interaction.reply({ content: 'ほ？', flags });
+        return;
+      }
+      await interaction.reply('このゲームには必勝法が存在する...');
+    },
+  },
+  bye: {
+    data: new SlashCommandBuilder().setName('bye').setDescription('グッバイマルバツゲーム'),
+    execute: async (interaction: ChatInputCommandInteraction, ticTacToe: TicTacToe) => {
+      await interaction.reply('ばいばい');
     },
   },
 };
@@ -25,5 +37,14 @@ export const slashCommandsInteraction = async (interaction: ChatInputCommandInte
     return;
   }
   const commandName = interaction.commandName as CommandName;
-  await registration[commandName].execute(interaction);
+  if (commandName === 'marubatsu') {
+    await registration.marubatsu.execute(interaction);
+    return;
+  }
+  const ticTacToe = game.get(interaction);
+  if (ticTacToe === null) {
+    await interaction.reply({ content: 'ほ？', flags });
+    return;
+  }
+  await registration[commandName].execute(interaction, ticTacToe);
 };

@@ -1,4 +1,13 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle } from 'discord.js';
+import { game, TicTacToe } from '@/TicTacToe';
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonInteraction,
+  ButtonStyle,
+  MessageFlags,
+} from 'discord.js';
+
+const flags = MessageFlags.Ephemeral;
 
 const registration = {
   test: {
@@ -6,7 +15,7 @@ const registration = {
       .setCustomId('test')
       .setLabel('テスト')
       .setStyle(ButtonStyle.Primary),
-    async execute(interaction: ButtonInteraction) {
+    async execute(interaction: ButtonInteraction, ticcTacToe: TicTacToe) {
       await interaction.deferUpdate();
     },
   },
@@ -19,8 +28,13 @@ const button = Object.fromEntries(
 ) as { [key in CustomId]: ButtonBuilder };
 
 export const buttonInteraction = async (interaction: ButtonInteraction) => {
+  const ticTacToe = game.get(interaction);
+  if (ticTacToe === null) {
+    await interaction.reply({ content: '`/marubatsu`しようね', flags });
+    return;
+  }
   const customId = interaction.customId;
-  await registration[customId as CustomId].execute(interaction);
+  await registration[customId as CustomId].execute(interaction, ticTacToe);
 };
 
 type ButtonKey = keyof typeof button;
