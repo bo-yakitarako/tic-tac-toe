@@ -15,8 +15,8 @@ export const extractIndexes = (indexes: number[]) => {
     { gap: 4, isValidStart: (index: number) => index === 0 }, // 斜め
   ];
   for (const { gap, isValidStart } of conditions) {
-    const startIndexex = indexes.filter(isValidStart);
-    for (const startIndex of startIndexex) {
+    const startIndexes = indexes.filter(isValidStart);
+    for (const startIndex of startIndexes) {
       if (indexes.includes(startIndex + gap) && indexes.includes(startIndex + gap * 2)) {
         return [startIndex, startIndex + gap, startIndex + gap * 2];
       }
