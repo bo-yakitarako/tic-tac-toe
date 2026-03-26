@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, Events, REST, Routes } from 'discord.js';
-import { commands, slashCommandsInteraction } from './components/slashCommands';
-import { buttonInteraction } from './components/buttons';
+import { commands, slashCommandsInteraction } from '@/components/slashCommands';
+import { buttonInteraction } from '@/components/buttons';
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
