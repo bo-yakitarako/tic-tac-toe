@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { extractIndexes, judge, parseIndexes } from '@/judgement';
+import { extractIndexes, judge, parseIndexes } from '@/lib/judgement';
 import { Area } from '@/TicTacToe';
 
 describe('parseIndexes', () => {
