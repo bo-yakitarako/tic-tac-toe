@@ -30,6 +30,11 @@ client.once(Events.ClientReady, async () => {
   }
 });
 
+// ホットリロード時の重複リスナー登録を防ぐ
+if (process.env.NODE_ENV === 'development') {
+  client.removeAllListeners(Events.InteractionCreate);
+}
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isChatInputCommand()) {
     await slashCommandsInteraction(interaction);
