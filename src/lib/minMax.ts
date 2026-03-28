@@ -75,6 +75,6 @@ export const minMax = (
   //   console.log({ me: isPlayerFirst === isSceneFirst, children, targetChildren });
   // }
   const target = targetChildren[Math.floor(Math.random() * targetChildren.length)];
-  const selected = selectedIndex === undefined ? target.selected : selectedIndex;
+  const selected = selectedIndex ?? target.selected;
   return { selected, value: target.value };
 };
