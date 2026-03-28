@@ -52,6 +52,11 @@ export const buttonInteraction = async (interaction: ButtonInteraction) => {
     return;
   }
   const customId = interaction.customId;
+  if (customId.includes('grid-')) {
+    const gridIndex = Number(customId.replace('grid-', ''));
+    await ticTacToe.putByPlayer(interaction, gridIndex);
+    return;
+  }
   await registration[customId as CustomId].execute(interaction, ticTacToe);
 };
 

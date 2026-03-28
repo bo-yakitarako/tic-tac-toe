@@ -18,6 +18,7 @@ export const memberInfo = ({ member, user }: RepliableInteraction, nameArrange?:
 
 const colors = {
   info: 0xe8d44f,
+  primary: 0x3b93ff,
   success: 0x53fc94,
   failure: 0xff5757,
 };
@@ -59,7 +60,7 @@ export function buildEmbed(
 ) {
   let description = '';
   let fields: EmbedField[] = [];
-  let color: ColorKey = 'success';
+  let color: ColorKey = 'primary';
   if (params[0] instanceof Array) {
     fields = params[0];
     if (typeof params[1] === 'string') {

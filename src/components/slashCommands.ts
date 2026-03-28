@@ -1,4 +1,4 @@
-import { game, TicTacToe } from '@/TicTacToe';
+import { game } from '@/TicTacToe';
 import {
   ChatInputCommandInteraction,
   MessageFlags,
@@ -24,8 +24,9 @@ const registration = {
   },
   bye: {
     data: new SlashCommandBuilder().setName('bye').setDescription('グッバイマルバツゲーム'),
-    execute: async (interaction: ChatInputCommandInteraction, ticTacToe: TicTacToe) => {
-      await ticTacToe.bye(interaction);
+    execute: async (interaction: ChatInputCommandInteraction) => {
+      game.remove(interaction);
+      await interaction.reply(':wave: ばいばーい');
     },
   },
 };
@@ -48,5 +49,5 @@ export const slashCommandsInteraction = async (interaction: ChatInputCommandInte
     await interaction.reply({ content: 'ほ？', flags });
     return;
   }
-  await registration[commandName].execute(interaction, ticTacToe);
+  await registration[commandName].execute(interaction);
 };
