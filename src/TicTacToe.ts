@@ -78,7 +78,7 @@ export class TicTacToe {
   }
 
   public async startWithPlayer(interaction: ButtonInteraction) {
-    await interaction.deferUpdate();
+    await interaction.reply({ content: 'まだ実装してないよ', flags });
   }
 
   public async configureCpu(interaction: ButtonInteraction) {

@@ -32,7 +32,7 @@ const registration = {
   startWithCpu: {
     component: new ButtonBuilder()
       .setCustomId('startWithCpu')
-      .setLabel('対戦開始！')
+      .setLabel('CPUと対戦開始！')
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
       await ticTacToe.startWithCpu(interaction);
