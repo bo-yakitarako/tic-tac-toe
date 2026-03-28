@@ -5,6 +5,7 @@ import {
   ButtonInteraction,
   ButtonStyle,
   MessageFlags,
+  TextChannel,
 } from 'discord.js';
 
 const flags = MessageFlags.Ephemeral;
@@ -35,6 +36,18 @@ const registration = {
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
       await ticTacToe.startWithCpu(interaction);
+    },
+  },
+  finish: {
+    component: new ButtonBuilder()
+      .setCustomId('finish')
+      .setLabel('もうやめる')
+      .setStyle(ButtonStyle.Danger),
+    async execute(interaction: ButtonInteraction) {
+      game.remove(interaction);
+      await interaction.deferUpdate();
+      await interaction.deleteReply();
+      await (interaction.channel as TextChannel).send(':wave: ばいばーい');
     },
   },
 };

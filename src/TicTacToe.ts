@@ -185,24 +185,31 @@ export class TicTacToe {
   }
 
   private async cpuFinish(interaction: ButtonInteraction, judgement: Judgement) {
-    await interaction.update(this.buildCpuGameInfoMessage(judgement?.bingo));
+    await interaction.message.edit(this.buildCpuGameInfoMessage(judgement?.bingo));
     if (judgement === null) {
       const embed = buildEmbed(
         '引き分け！',
         'なかなかいい戦いだったぜ\nだが、次はこうは行けないぞ？',
       );
       await (interaction.channel as TextChannel).send({ embeds: [embed] });
-      return;
+    } else {
+      const { winner } = judgement;
+      const isWinParent = this.judgeParentWinning(winner);
+      const title = isWinParent ? `${this.parent.name}くんの勝ち！` : 'CPUに敗けちゃったね...';
+      const description = isWinParent
+        ? 'くっ...なかなかやるじゃねえか...！\n次は敗けねえぞ！'
+        : 'うぇ乁( ˙ω˙ )厂ーい\n俺の勝ち～ｗｗｗｗｗｗｗｗｗｗ';
+      const embed = buildEmbed(title, description, isWinParent ? 'success' : 'failure');
+      await (interaction.channel as TextChannel).send({ embeds: [embed] });
     }
-    const { winner } = judgement;
-    const isWinParent = this.judgeParentWinning(winner);
-    const title = isWinParent ? `${this.parent.name}くんの勝ち！` : 'CPUに敗けちゃったね...';
-    const description = isWinParent
-      ? 'くっ...なかなかやるじゃねえか...！\n次は敗けねえぞ！'
-      : 'うぇ乁( ˙ω˙ )厂ーい\n俺の勝ち～ｗｗｗｗｗｗｗｗｗｗ';
-    const embed = buildEmbed(title, description, isWinParent ? 'success' : 'failure');
-    await (interaction.channel as TextChannel).send({ embeds: [embed] });
-    game.remove(interaction);
+    const content = 'この後はどうするー？';
+    const components = [
+      makeSelectMenuRow('strengthSelect', this.cpuStrength),
+      makeSelectMenuRow('selectParentTurn', this.parentIsFirst),
+      makeSelectMenuRow('selectParentMark', this.parentMark),
+      makeButtonRow('startWithCpu', 'withPlayer', 'finish'),
+    ];
+    await interaction.reply({ content, components, flags });
   }
 
   private get currentTurnGrid() {
