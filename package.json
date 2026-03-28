@@ -11,7 +11,9 @@
     "dev": "dotenvx run -- bun run --hot src/main.ts",
     "test": "bun test",
     "lint": "oxlint --fix && oxfmt --write src",
-    "build": "bun build src/main.ts --target bun --minify --outfile dist/index.js"
+    "build": "bun build src/main.ts --target bun --minify --outfile dist/index.js",
+    "decrypt": "dotenvx decrypt",
+    "encrypt": "dotenvx encrypt"
   },
   "dependencies": {
     "discord.js": "^14.21.0"

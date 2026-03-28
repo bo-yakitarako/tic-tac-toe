@@ -10,13 +10,22 @@ import {
 const flags = MessageFlags.Ephemeral;
 
 const registration = {
-  test: {
+  withPlayer: {
     component: new ButtonBuilder()
-      .setCustomId('test')
-      .setLabel('テスト')
+      .setCustomId('withPlayer')
+      .setLabel('誰かと対戦する')
       .setStyle(ButtonStyle.Primary),
-    async execute(interaction: ButtonInteraction, ticcTacToe: TicTacToe) {
-      await interaction.deferUpdate();
+    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
+      await ticTacToe.startWithPlayer(interaction);
+    },
+  },
+  withCpu: {
+    component: new ButtonBuilder()
+      .setCustomId('withCpu')
+      .setLabel('CPUと対戦する')
+      .setStyle(ButtonStyle.Primary),
+    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
+      await ticTacToe.startWithCpu(interaction);
     },
   },
 };

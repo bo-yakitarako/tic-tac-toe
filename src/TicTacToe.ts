@@ -1,4 +1,4 @@
-import { Interaction, MessageFlags, RepliableInteraction } from 'discord.js';
+import { ButtonInteraction, Interaction, MessageFlags, RepliableInteraction } from 'discord.js';
 
 const guilds: { [guildId in string]: TicTacToe } = {};
 export const game = {
@@ -28,4 +28,16 @@ const flags = MessageFlags.Ephemeral;
 type Grid = 0 | 1 | 2; // 0: まだ置かれてない, 1: 先手, 2: 後手
 export type Area = [Grid, Grid, Grid, Grid, Grid, Grid, Grid, Grid, Grid];
 
-export class TicTacToe {}
+export class TicTacToe {
+  public async startWithPlayer(interaction: ButtonInteraction) {
+    await interaction.deferUpdate();
+  }
+
+  public async startWithCpu(interaction: ButtonInteraction) {
+    await interaction.deferUpdate();
+  }
+
+  public async bye(interaction: RepliableInteraction) {
+    await interaction.reply(':bye:');
+  }
+}

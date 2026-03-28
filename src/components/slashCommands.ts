@@ -5,6 +5,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
+import { makeButtonRow } from './buttons';
 
 const flags = MessageFlags.Ephemeral;
 
@@ -17,13 +18,14 @@ const registration = {
         await interaction.reply({ content: 'ほ？', flags });
         return;
       }
-      await interaction.reply('このゲームには必勝法が存在する...');
+      const components = [makeButtonRow('withPlayer', 'withCpu')];
+      await interaction.reply({ content: 'はぁいこんにちは', components, flags });
     },
   },
   bye: {
     data: new SlashCommandBuilder().setName('bye').setDescription('グッバイマルバツゲーム'),
     execute: async (interaction: ChatInputCommandInteraction, ticTacToe: TicTacToe) => {
-      await interaction.reply('ばいばい');
+      await ticTacToe.bye(interaction);
     },
   },
 };
