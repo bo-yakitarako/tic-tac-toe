@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install -y tzdata fontconfig fonts-dejavu fonts-li
 WORKDIR /app
 
 COPY . .
-RUN bun install --frozen-lockfile && bun build src/main.ts --minify --outfile dist/index.js
+RUN bun install --frozen-lockfile && bun run build
 
 CMD ["bun", "dist/index.js"]
