@@ -11,6 +11,27 @@ const TOKEN = process.env.TOKEN as string;
 const CLIENT_ID = process.env.CLIENT_ID as string;
 const GUILD_ID = process.env.GUILD_ID ?? null;
 
+let isReady = false;
+
+// ホットリロード時の重複リスナー登録を防ぐ
+if (process.env.NODE_ENV === 'development') {
+  client.removeAllListeners(Events.InteractionCreate);
+}
+
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!isReady) return;
+
+  if (interaction.isChatInputCommand()) {
+    await slashCommandsInteraction(interaction);
+  }
+  if (interaction.isButton()) {
+    await buttonInteraction(interaction);
+  }
+  if (interaction.isStringSelectMenu()) {
+    await selectMenuInteraction(interaction);
+  }
+});
+
 client.once(Events.ClientReady, async () => {
   console.log('バカにしやがってると負けんぞ');
 
@@ -28,23 +49,8 @@ client.once(Events.ClientReady, async () => {
   } catch (error) {
     console.error(error);
   }
-});
 
-// ホットリロード時の重複リスナー登録を防ぐ
-if (process.env.NODE_ENV === 'development') {
-  client.removeAllListeners(Events.InteractionCreate);
-}
-
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    await slashCommandsInteraction(interaction);
-  }
-  if (interaction.isButton()) {
-    await buttonInteraction(interaction);
-  }
-  if (interaction.isStringSelectMenu()) {
-    await selectMenuInteraction(interaction);
-  }
+  isReady = true;
 });
 
 void client.login(TOKEN);
