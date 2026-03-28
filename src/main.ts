@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Events, REST, Routes } from 'discord.js';
 import { commands, slashCommandsInteraction } from '@/components/slashCommands';
 import { buttonInteraction } from '@/components/buttons';
+import { selectMenuInteraction } from '@/components/selectMenu';
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -17,12 +18,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isButton()) {
     await buttonInteraction(interaction);
   }
+  if (interaction.isStringSelectMenu()) {
+    await selectMenuInteraction(interaction);
+  }
 });
 
 const TOKEN = process.env.TOKEN as string;
 const CLIENT_ID = process.env.CLIENT_ID as string;
 const GUILD_ID = process.env.GUILD_ID ?? null;
-const rest = new REST({ version: '10' }).setToken(TOKEN);
+const rest = new REST().setToken(TOKEN);
 void (async () => {
   try {
     if (GUILD_ID !== null) {

@@ -25,6 +25,15 @@ const registration = {
       .setLabel('CPUと対戦する')
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
+      await ticTacToe.configureCpu(interaction);
+    },
+  },
+  startWithCpu: {
+    component: new ButtonBuilder()
+      .setCustomId('startWithCpu')
+      .setLabel('対戦開始！')
+      .setStyle(ButtonStyle.Primary),
+    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
       await ticTacToe.startWithCpu(interaction);
     },
   },
