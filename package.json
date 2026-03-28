@@ -6,7 +6,8 @@
   "author": "bo-yakitarako",
   "main": "dist/index.js",
   "scripts": {
-    "start": "dotenvx run -- bun dist/index.js",
+    "start": "dotenvx run -- bun src/main.ts",
+    "start:dist": "dotenvx run -- bun dist/index.js",
     "delete": "dotenvx run -- bun src/commandDelete.ts",
     "dev": "dotenvx run -- bun run --watch src/main.ts",
     "test": "bun test",
