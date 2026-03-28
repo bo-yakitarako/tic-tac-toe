@@ -39,7 +39,6 @@ export const evaluate = (area: Area, isPlayerFirst: boolean) => {
 
 export const minMax = (
   area: Area,
-  history: number[] = [],
   isPlayerFirst?: boolean,
   selectedIndex?: number,
 ): { selected: number; value: number } => {
@@ -64,8 +63,7 @@ export const minMax = (
   const children = candidateIndexes.map((i) => {
     const newArea = [...area] as Area;
     newArea[i] = gridNumber;
-    const newHistory = [...history, i];
-    return minMax(newArea, newHistory, isPlayerFirst, i);
+    return minMax(newArea, isPlayerFirst, i);
   });
   const sign = isPlayerFirst === isSceneFirst ? 1 : -1;
   const targetChildren = [...children]
