@@ -11,6 +11,9 @@ client.once(Events.ClientReady, () => {
   console.log('バカにしやがってると負けんぞ');
 });
 
+// ホットリロード時の重複リスナー登録を防ぐ
+client.removeAllListeners(Events.InteractionCreate);
+
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isChatInputCommand()) {
     await slashCommandsInteraction(interaction);

@@ -8,7 +8,7 @@
   "scripts": {
     "start": "dotenvx run -- bun dist/index.js",
     "delete": "dotenvx run -- bun src/commandDelete.ts",
-    "dev": "dotenvx run -- bun run --hot src/main.ts",
+    "dev": "dotenvx run -- bun run --watch src/main.ts",
     "test": "bun test",
     "lint": "oxlint --fix && oxfmt --write src",
     "build": "bun build src/main.ts --target bun --minify --outfile dist/index.js",
