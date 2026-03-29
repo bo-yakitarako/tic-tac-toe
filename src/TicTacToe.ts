@@ -1,7 +1,6 @@
 import {
   ButtonInteraction,
   EmbedBuilder,
-  Interaction,
   MessageFlags,
   RepliableInteraction,
   TextChannel,
@@ -12,27 +11,27 @@ import { buildEmbed, memberInfo } from '@/lib/utils';
 import { minMax } from '@/lib/minMax';
 import { judge } from '@/lib/judgement';
 
-const guilds: { [guildId in string]: TicTacToe } = {};
+const channels: { [channelId in string]: TicTacToe } = {};
 export const game = {
-  get({ guildId }: Interaction) {
-    if (guildId === null) {
+  get({ channelId }: RepliableInteraction) {
+    if (channelId === null) {
       return null;
     }
-    return guilds[guildId] ?? null;
+    return channels[channelId] ?? null;
   },
   create(interaction: RepliableInteraction) {
-    const { guildId } = interaction;
-    if (guildId === null) {
+    const { channelId } = interaction;
+    if (channelId === null) {
       return null;
     }
-    guilds[guildId] = new TicTacToe(interaction);
-    return guilds[guildId];
+    channels[channelId] = new TicTacToe(interaction);
+    return channels[channelId];
   },
-  remove({ guildId }: Interaction) {
-    if (guildId === null) {
+  remove({ channelId }: RepliableInteraction) {
+    if (channelId === null) {
       return;
     }
-    delete guilds[guildId];
+    delete channels[channelId];
   },
 };
 
@@ -76,6 +75,11 @@ export class TicTacToe {
   constructor(interaction: RepliableInteraction) {
     this.parent = { id: interaction.user.id, ...memberInfo(interaction) };
     this.channel = interaction.channel as TextChannel;
+  }
+
+  public async noticeAlreadyInGame(interaction: RepliableInteraction) {
+    const content = `このチャンネルでは既に${this.parent.name}くんが\`/marubatsu\`しちゃってるね\n終わるのを待つか、他のチャンネルで\`/marubatsu\`してみてねー`;
+    await interaction.reply({ content, flags });
   }
 
   public async callOnEveryoneToJoin(interaction: ButtonInteraction) {

@@ -13,6 +13,11 @@ const registration = {
   marubatsu: {
     data: new SlashCommandBuilder().setName('marubatsu').setDescription('マルバツゲームしようぜ'),
     execute: async (interaction: ChatInputCommandInteraction) => {
+      const alreadyGame = game.get(interaction);
+      if (alreadyGame !== null) {
+        await alreadyGame.noticeAlreadyInGame(interaction);
+        return;
+      }
       const ticTacToe = game.create(interaction);
       if (ticTacToe === null) {
         await interaction.reply({ content: 'ほ？', flags });
