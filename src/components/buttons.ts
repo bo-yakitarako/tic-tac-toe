@@ -31,8 +31,12 @@ const registration = {
     },
   },
   startBattle: {
-    component: (title: string) =>
-      new ButtonBuilder().setCustomId('startBattle').setLabel(title).setStyle(ButtonStyle.Primary),
+    component: (canStart: boolean, retry?: boolean) =>
+      new ButtonBuilder()
+        .setCustomId('startBattle')
+        .setLabel(retry ? 'もう一回やる' : '対戦開始！')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!canStart),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
       await ticTacToe.startBattle(interaction);
     },
@@ -47,10 +51,12 @@ const registration = {
     },
   },
   startWithCpu: {
-    component: new ButtonBuilder()
-      .setCustomId('startWithCpu')
-      .setLabel('CPUと対戦開始！')
-      .setStyle(ButtonStyle.Primary),
+    component: (canStart: boolean, retry?: boolean) =>
+      new ButtonBuilder()
+        .setCustomId('startWithCpu')
+        .setLabel(retry ? 'CPUともっかいやる' : 'CPUと対戦開始！')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!canStart),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
       await ticTacToe.startWithCpu(interaction);
     },

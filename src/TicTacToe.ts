@@ -5,7 +5,7 @@ import {
   RepliableInteraction,
   TextChannel,
 } from 'discord.js';
-import { makeSelectMenuRow } from '@/components/selectMenu';
+import { makeSelectMenuRow, strengthTitle } from '@/components/selectMenu';
 import { makeButtonRow } from '@/components/buttons';
 import { buildEmbed, memberInfo } from '@/lib/utils';
 import { minMax } from '@/lib/minMax';
@@ -42,12 +42,6 @@ export type Area = [Grid, Grid, Grid, Grid, Grid, Grid, Grid, Grid, Grid];
 const defaultArea: Area = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 export type Mark = ':o:' | ':x:';
 export type Strength = 'weak' | 'normal' | 'strong' | 'unbeatable';
-export const strengthTitle: { [strength in Strength]: string } = {
-  weak: 'ょゎぃ',
-  normal: 'ふつう',
-  strong: 'っょぃ',
-  unbeatable: 'もぅまぢむり。。。',
-};
 const properGridRatio: { [strength in Strength]: number } = {
   weak: 0,
   normal: 0.3,
@@ -65,9 +59,10 @@ type Judgement = ReturnType<typeof judge>;
 export class TicTacToe {
   private parent: Player;
   private channel: TextChannel;
-  private cpuStrength: Strength = 'weak';
-  private parentIsFirst = true;
-  private parentMark: Mark = ':o:';
+  private gameMode: 'player' | 'cpu' = 'player';
+  private cpuStrength: Strength | null = null;
+  private parentIsFirst: boolean | null = null;
+  private parentMark: Mark | null = null;
   private area: Area = [...defaultArea];
   private opponent: Player | null = null;
   private turnPlayerId = '';
@@ -84,15 +79,33 @@ export class TicTacToe {
 
   public async callOnEveryoneToJoin(interaction: ButtonInteraction) {
     this.opponent = null;
+    this.gameMode = 'player';
+    this.area = [...defaultArea];
+    await interaction.update(this.configurationMessage);
+    const content = `@here ${this.parent.name}のヤツが対戦相手を募集してんぞ！誰か来てくれー！`;
+    await this.channel.send({ content, components: [makeButtonRow(['join', this.parent.name])] });
+  }
+
+  public get configurationMessage() {
+    return this.gameMode === 'player'
+      ? this.buildPlayerConfigurationMessage()
+      : this.buildCpuConfigurationMessage();
+  }
+
+  private buildPlayerConfigurationMessage() {
+    const isEnded = this.area.some((grid) => grid !== 0);
     let content = '対戦相手を募集すんぞぉ！おめえさんの番は何がいいか決めておこうな';
+    const buttons: Parameters<typeof makeButtonRow> = [['startBattle', this.canStart, isEnded]];
+    if (isEnded) {
+      buttons.push('withPlayer', 'withCpu', 'finish');
+      content = `この後はどうするー？\n他の人とやりたい場合は「誰かと対戦する」にしてねー`;
+    }
     const components = [
       makeSelectMenuRow('selectParentTurn', this.parentIsFirst),
       makeSelectMenuRow('selectParentMark', this.parentMark),
-      makeButtonRow(['startBattle', '対戦開始！']),
+      makeButtonRow(...buttons),
     ];
-    await interaction.update({ content, components });
-    content = `@here ${this.parent.name}のヤツが対戦相手を募集してんぞ！誰か来てくれー！`;
-    await this.channel.send({ content, components: [makeButtonRow(['join', this.parent.name])] });
+    return { content, components };
   }
 
   public async join(interaction: ButtonInteraction) {
@@ -151,14 +164,9 @@ export class TicTacToe {
 
   public async configureCpu(interaction: ButtonInteraction) {
     this.opponent = null;
-    const components = [
-      makeSelectMenuRow('strengthSelect', this.cpuStrength),
-      makeSelectMenuRow('selectParentTurn', this.parentIsFirst),
-      makeSelectMenuRow('selectParentMark', this.parentMark),
-      makeButtonRow('startWithCpu'),
-    ];
-    const content = `CPUのつよさと、${this.parent.name}の順番と:o:と:x:のどっち使いたいかとを決めて始めようねー`;
-    await interaction.update({ content, components });
+    this.gameMode = 'cpu';
+    this.area = [...defaultArea];
+    await interaction.update(this.configurationMessage);
   }
 
   public setCpuStrength(strength: Strength) {
@@ -171,6 +179,30 @@ export class TicTacToe {
 
   public setParentMark(parentMark: Mark) {
     this.parentMark = parentMark;
+  }
+
+  private buildCpuConfigurationMessage() {
+    const isEnded = this.area.some((grid) => grid !== 0);
+    const content = isEnded ? '次はどうするー？もっかいやる？' : 'なんか色々設定したらはじめよやー';
+    const buttons: Parameters<typeof makeButtonRow> = [['startWithCpu', this.canStart, isEnded]];
+    if (isEnded) {
+      buttons.push('withPlayer', 'finish');
+    }
+    const components = [
+      makeSelectMenuRow('strengthSelect', this.cpuStrength),
+      makeSelectMenuRow('selectParentTurn', this.parentIsFirst),
+      makeSelectMenuRow('selectParentMark', this.parentMark),
+      makeButtonRow(...buttons),
+    ];
+    return { content, components };
+  }
+
+  private get canStart() {
+    const commonCondition = this.parentIsFirst !== null && this.parentMark !== null;
+    if (this.gameMode === 'player') {
+      return commonCondition;
+    }
+    return commonCondition && this.cpuStrength !== null;
   }
 
   public async startWithCpu(interaction: ButtonInteraction) {
@@ -186,7 +218,7 @@ export class TicTacToe {
 
   private putByCpu() {
     const cpuTurn = this.parentIsFirst ? 2 : 1;
-    if (Math.random() > properGridRatio[this.cpuStrength]) {
+    if (Math.random() > properGridRatio[this.cpuStrength!]) {
       const girdsWithIndex = this.area.map((grid, i) => ({ grid, i }));
       const validIndexes = girdsWithIndex.filter(({ grid }) => grid === 0).map(({ i }) => i);
       const randomIndex = Math.floor(Math.random() * validIndexes.length);
@@ -200,7 +232,7 @@ export class TicTacToe {
     const ended = bingo !== undefined || !this.hasEmpty;
     const embed = new EmbedBuilder()
       .setAuthor({ name: `${this.parent.name}くんの挑戦！`, iconURL: this.parent.iconURL })
-      .setTitle(`CPU(${strengthTitle[this.cpuStrength]})との対決！`)
+      .setTitle(`CPU(${strengthTitle[this.cpuStrength!].title})との対決！`)
       .setDescription(`${this.parent.name}くんのマーク: ${this.parentMark}`)
       .setColor(0x3b93ff)
       .setFooter({ text: ended ? 'おぉっと！？決着だぁ！' : '一体どっちが勝つんだー！？' });
@@ -209,7 +241,7 @@ export class TicTacToe {
 
   private get firstMark() {
     if (this.parentIsFirst) {
-      return this.parentMark;
+      return this.parentMark!;
     }
     return this.parentMark === ':o:' ? ':x:' : ':o:';
   }
@@ -263,13 +295,7 @@ export class TicTacToe {
       await interaction.reply({ content: 'あんたにゃ関係ねーよー？', flags });
       return;
     }
-    const components = [
-      makeSelectMenuRow('selectParentTurn', this.parentIsFirst),
-      makeSelectMenuRow('selectParentMark', this.parentMark),
-      makeButtonRow(['startBattle', '再戦する！'], 'withPlayer', 'withCpu', 'finish'),
-    ];
-    const content = 'この後はどうするー？\n他の人とやりたい場合は「誰かと対戦する」にしてねー';
-    await interaction.reply({ content, components, flags });
+    await interaction.reply({ ...this.configurationMessage, flags });
     await interaction.message.edit({ embeds: interaction.message.embeds, components: [] });
   }
 
@@ -305,13 +331,7 @@ export class TicTacToe {
       const embed = buildEmbed(title, description, isWinParent ? 'success' : 'failure');
       await this.channel.send({ embeds: [embed] });
     }
-    const components = [
-      makeSelectMenuRow('strengthSelect', this.cpuStrength),
-      makeSelectMenuRow('selectParentTurn', this.parentIsFirst),
-      makeSelectMenuRow('selectParentMark', this.parentMark),
-      makeButtonRow('startWithCpu', 'withPlayer', 'finish'),
-    ];
-    await interaction.reply({ content: 'この後はどうするー？', components, flags });
+    await interaction.reply({ ...this.configurationMessage, flags });
   }
 
   private get currentTurnGrid() {

@@ -1,4 +1,4 @@
-import { game, Mark, Strength, strengthTitle, TicTacToe } from '@/TicTacToe';
+import { game, Mark, Strength, TicTacToe } from '@/TicTacToe';
 import {
   ActionRowBuilder,
   MessageFlags,
@@ -9,12 +9,20 @@ import {
 
 const flags = MessageFlags.Ephemeral;
 
+export const strengthTitle: { [strength in Strength]: { title: string; description: string } } = {
+  weak: { title: 'ょゎぃ', description: 'あへぇ～？？？' },
+  normal: { title: 'ふつう', description: 'おれ、まけねえから！' },
+  strong: { title: 'っょぃ', description: '私に勝負を挑むとは良い度胸だな貴様' },
+  unbeatable: { title: 'もぅまぢむり。。。', description: 'ｩﾁにゎかてなぃ。。。ﾘｽｶしょ。。。' },
+};
+
 const registration = {
   strengthSelect: {
-    component(defaultStrength: Strength) {
+    component(defaultStrength: Strength | null) {
       const options = (Object.keys(strengthTitle) as Strength[]).map((strength) =>
         new StringSelectMenuOptionBuilder()
-          .setLabel(strengthTitle[strength])
+          .setLabel(strengthTitle[strength].title)
+          .setDescription(strengthTitle[strength].description)
           .setValue(strength)
           .setDefault(strength === defaultStrength),
       );
@@ -25,11 +33,11 @@ const registration = {
     },
     async execute(interaction: StringSelectMenuInteraction, ticTacToe: TicTacToe) {
       ticTacToe.setCpuStrength(interaction.values[0] as Strength);
-      await interaction.deferUpdate();
+      await interaction.update(ticTacToe.configurationMessage);
     },
   },
   selectParentTurn: {
-    component(parentIsFirst: boolean) {
+    component(parentIsFirst: boolean | null) {
       const turnLabel = { first: 'やっぱ先攻っしょ', second: '残り物には福があるんだ。後攻で' };
       const options = (Object.keys(turnLabel) as (keyof typeof turnLabel)[]).map((turn) =>
         new StringSelectMenuOptionBuilder()
@@ -39,16 +47,16 @@ const registration = {
       );
       return new StringSelectMenuBuilder()
         .setCustomId('selectParentTurn')
-        .setPlaceholder('先攻後攻を選択')
+        .setPlaceholder('おめえさんの先攻後攻を選択')
         .addOptions(options);
     },
     async execute(interaction: StringSelectMenuInteraction, ticTacToe: TicTacToe) {
       ticTacToe.setParentIsFirst(interaction.values[0] as 'first' | 'second');
-      await interaction.deferUpdate();
+      await interaction.update(ticTacToe.configurationMessage);
     },
   },
   selectParentMark: {
-    component(parentMark: Mark) {
+    component(parentMark: Mark | null) {
       const label = { ':o:': '〇以外なくね？', ':x:': '我は✕で交錯する運命...' };
       const options = ([':o:', ':x:'] as Mark[]).map((mark) =>
         new StringSelectMenuOptionBuilder()
@@ -58,12 +66,12 @@ const registration = {
       );
       return new StringSelectMenuBuilder()
         .setCustomId('selectParentMark')
-        .setPlaceholder('自分のマークを選択')
+        .setPlaceholder('おめえさんのマークを選択')
         .addOptions(options);
     },
     async execute(interaction: StringSelectMenuInteraction, ticTacToe: TicTacToe) {
       ticTacToe.setParentMark(interaction.values[0] as Mark);
-      await interaction.deferUpdate();
+      await interaction.update(ticTacToe.configurationMessage);
     },
   },
 };
