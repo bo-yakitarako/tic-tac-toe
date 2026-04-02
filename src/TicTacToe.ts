@@ -150,16 +150,11 @@ export class TicTacToe {
   }
 
   private buildAreaComponents(bingo?: number[]) {
-    type param = Parameters<typeof makeButtonRow>[0];
-    const componentParams: param[][] = [];
-    for (let i = 0; i < this.area.length; i += 1) {
-      if (i % 3 === 0) {
-        componentParams.push([]);
-      }
-      const param: param = ['grid', this.area, i, this.firstMark, bingo];
-      componentParams[componentParams.length - 1].push(param);
-    }
-    return componentParams.map((rowParams) => makeButtonRow(...rowParams));
+    type Param = Parameters<typeof makeButtonRow>[0];
+    const chunks = this.area.withIndex().chunk(3);
+    return chunks.map((row) =>
+      makeButtonRow(...row.map<Param>(({ i }) => ['grid', this.area, i, this.firstMark, bingo])),
+    );
   }
 
   public async configureCpu(interaction: ButtonInteraction) {
