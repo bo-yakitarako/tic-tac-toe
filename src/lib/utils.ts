@@ -6,22 +6,15 @@ import {
   RepliableInteraction,
 } from 'discord.js';
 
-declare global {
-  interface Array<T> {
-    chunk(size: number): T[][];
-    withIndex(): { v: T; i: number }[];
-  }
+export function withIndex<T>(array: T[]) {
+  return array.map((v, i) => ({ v, i }));
 }
 
-Array.prototype.withIndex = function <T>(this: T[]) {
-  return this.map((v, i) => ({ v, i }));
-};
-
-Array.prototype.chunk = function <T>(this: T[], size: number): T[][] {
-  return Array.from({ length: Math.ceil(this.length / size) }, (_, i) =>
-    this.slice(i * size, i * size + size),
+export function chunk<T>(array: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
+    array.slice(i * size, i * size + size),
   );
-};
+}
 
 type NameArrange = (name: string) => string;
 export const memberInfo = ({ member, user }: RepliableInteraction, nameArrange?: NameArrange) => {

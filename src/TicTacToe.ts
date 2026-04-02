@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import { makeSelectMenuRow, strengthTitle } from '@/components/selectMenu';
 import { makeButtonRow } from '@/components/buttons';
-import { buildEmbed, memberInfo } from '@/lib/utils';
+import { buildEmbed, chunk, memberInfo, withIndex } from '@/lib/utils';
 import { minMax } from '@/lib/minMax';
 import { judge } from '@/lib/judgement';
 
@@ -151,7 +151,7 @@ export class TicTacToe {
 
   private buildAreaComponents(bingo?: number[]) {
     type Param = Parameters<typeof makeButtonRow>[0];
-    const chunks = this.area.withIndex().chunk(3);
+    const chunks = chunk(withIndex(this.area), 3);
     return chunks.map((row) =>
       makeButtonRow(...row.map<Param>(({ i }) => ['grid', this.area, i, this.firstMark, bingo])),
     );
