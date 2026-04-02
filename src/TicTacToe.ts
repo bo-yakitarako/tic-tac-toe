@@ -151,8 +151,7 @@ export class TicTacToe {
 
   private buildAreaComponents(bingo?: number[]) {
     type Param = Parameters<typeof makeButtonRow>[0];
-    const chunks = chunk(withIndex(this.area), 3);
-    return chunks.map((row) =>
+    return chunk(withIndex(this.area), 3).map((row) =>
       makeButtonRow(...row.map<Param>(({ i }) => ['grid', this.area, i, this.firstMark, bingo])),
     );
   }
