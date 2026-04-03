@@ -1,19 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { extractIndexes, judge, parseIndexes } from '@/lib/judgement';
+import { extractIndexes, judge } from '@/lib/judgement';
 import { Area } from '@/TicTacToe';
-
-describe('parseIndexes', () => {
-  test.each<{
-    area: Area;
-    first: number[];
-    second: number[];
-  }>([{ area: [0, 1, 2, 0, 0, 1, 2, 1, 0], first: [1, 5, 7], second: [2, 6] }])(
-    '先攻後攻のindexexを分ける: $area -> first: $first, second: $second',
-    ({ area, first, second }) => {
-      expect(parseIndexes(area)).toEqual({ first, second });
-    },
-  );
-});
 
 describe('extractIndexes', () => {
   test.each([

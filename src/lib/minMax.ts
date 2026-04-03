@@ -42,18 +42,15 @@ export const minMax = (
   isPlayerFirst?: boolean,
   selectedIndex?: number,
 ): { selected: number; value: number } => {
-  // 初手だった場合は角か真ん中を選択する
   if (area.every((value) => value === 0)) {
     const indexes = [0, 2, 4, 6, 8];
     const selected = indexes[Math.floor(Math.random() * indexes.length)];
     return { selected, value: 0 };
   }
-  const areasWithIndex = area.map((v, i) => ({ v, i }));
-  const candidateIndexes = areasWithIndex.filter(({ v }) => v === 0).map(({ i }) => i);
+  const candidateIndexes = area.flatMap((v, i) => (v === 0 ? [i] : []));
   if (isPlayerFirst === undefined) {
     isPlayerFirst = candidateIndexes.length % 2 === 1;
   }
-  // ゲームが終了している場合は評価値を返す
   if (candidateIndexes.length === 0 || judge(area) !== null) {
     const value = evaluate(area, isPlayerFirst);
     return { selected: selectedIndex!, value };
@@ -69,11 +66,6 @@ export const minMax = (
   const targetChildren = [...children]
     .sort((a, b) => sign * (b.value - a.value))
     .filter(({ value }, _, arr) => value === arr[0].value);
-  // if (selectedIndex === undefined) {
-  //   console.log();
-  //   console.log({ history });
-  //   console.log({ me: isPlayerFirst === isSceneFirst, children, targetChildren });
-  // }
   const target = targetChildren[Math.floor(Math.random() * targetChildren.length)];
   const selected = selectedIndex ?? target.selected;
   return { selected, value: target.value };

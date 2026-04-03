@@ -1,12 +1,5 @@
 import { Area } from '@/TicTacToe';
 
-export const parseIndexes = (area: Area) => {
-  const areasWithIndex = area.map((value, index) => ({ value, index }));
-  const first = areasWithIndex.filter(({ value }) => value === 1).map(({ index }) => index);
-  const second = areasWithIndex.filter(({ value }) => value === 2).map(({ index }) => index);
-  return { first, second };
-};
-
 export const extractIndexes = (indexes: number[]) => {
   const conditions = [
     { gap: 1, isValidStart: (index: number) => index % 3 === 0 }, // 横
@@ -26,14 +19,11 @@ export const extractIndexes = (indexes: number[]) => {
 };
 
 export const judge = (area: Area) => {
-  const { first, second } = parseIndexes(area);
-  const firstTrio = extractIndexes(first);
-  if (firstTrio !== null) {
-    return { winner: 'first', bingo: firstTrio } as const;
-  }
-  const secondTrio = extractIndexes(second);
-  if (secondTrio !== null) {
-    return { winner: 'second', bingo: secondTrio } as const;
+  for (const grid of [1, 2]) {
+    const bingo = extractIndexes(area.flatMap((v, i) => (v === grid ? [i] : [])));
+    if (bingo !== null) {
+      return { winner: grid === 1 ? 'first' : 'second', bingo } as const;
+    }
   }
   return null;
 };
