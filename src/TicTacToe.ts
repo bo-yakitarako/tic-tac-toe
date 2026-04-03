@@ -308,6 +308,7 @@ export class TicTacToe {
   }
 
   private async cpuFinish(interaction: ButtonInteraction, judgement: Judgement) {
+    await interaction.deferUpdate();
     await interaction.message.edit(this.buildCpuGameInfoMessage(judgement?.bingo));
     if (judgement === null) {
       const embed = buildEmbed(
@@ -325,7 +326,7 @@ export class TicTacToe {
       const embed = buildEmbed(title, description, isWinParent ? 'success' : 'failure');
       await this.channel.send({ embeds: [embed] });
     }
-    await interaction.reply({ ...this.configurationMessage, flags });
+    await interaction.followUp({ ...this.configurationMessage, flags });
   }
 
   private get currentTurnGrid() {
