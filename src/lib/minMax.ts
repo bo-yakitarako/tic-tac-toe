@@ -30,10 +30,9 @@ export const minMax = (
     newArea[i] = gridNumber;
     return minMax(newArea, isPlayerFirst, i);
   });
-  const sign = isPlayerFirst === isSceneFirst ? 1 : -1;
-  const targetChildren = [...children]
-    .sort((a, b) => sign * (b.value - a.value))
-    .filter(({ value }, _, arr) => value === arr[0].value);
+  const minMaxMethod = isPlayerFirst === isSceneFirst ? Math.max : Math.min;
+  const minMaxValue = minMaxMethod(...children.map(({ value }) => value));
+  const targetChildren = [...children].filter(({ value }) => value === minMaxValue);
   const target = targetChildren[Math.floor(Math.random() * targetChildren.length)];
   const selected = selectedIndex ?? target.selected;
   return { selected, value: target.value };
