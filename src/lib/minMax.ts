@@ -24,10 +24,9 @@ export const minMax = (
   }
   if (candidateIndexes.length === 0) return { selected: selectedIndex!, value: 0 };
   const isSceneFirst = candidateIndexes.length % 2 === 1;
-  const gridNumber = isSceneFirst ? 1 : 2;
   const children = candidateIndexes.map((i) => {
     const newArea = [...area] as Area;
-    newArea[i] = gridNumber;
+    newArea[i] = isSceneFirst ? 1 : 2;
     return minMax(newArea, isPlayerFirst, i);
   });
   const minMaxMethod = isPlayerFirst === isSceneFirst ? Math.max : Math.min;
