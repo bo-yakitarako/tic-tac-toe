@@ -12,7 +12,7 @@ export const extractIndexes = (indexes: number[]) => {
   for (const { gap, isValidStart } of conditions) {
     const startIndexes = indexes.filter(isValidStart);
     for (const startIndex of startIndexes) {
-      const targets = Array.from({ length: 3 }, (_, i) => startIndex + gap * i);
+      const targets = Array.from({ length: SIZE }, (_, i) => startIndex + gap * i);
       if (targets.every((target) => indexes.includes(target))) {
         return targets;
       }
