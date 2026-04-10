@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import { makeSelectMenuRow, strengthTitle } from '@/components/selectMenu';
 import { makeButtonRow } from '@/components/buttons';
-import { buildEmbed, chunk, memberInfo, withIndex } from '@/lib/utils';
+import { buildEmbed, chunk, getMemberInfo, MemberInfo, withIndex } from '@/lib/utils';
 import { minMax } from '@/lib/minMax';
 import { judge } from '@/lib/judgement';
 import { BotError } from '@/BotError';
@@ -50,34 +50,22 @@ const properGridRatio: { [strength in Strength]: number } = {
   unbeatable: 1,
 };
 
-type Player = {
-  id: string;
-  name: string;
-  iconURL: string;
-};
 type Judgement = ReturnType<typeof judge>;
 
 export class TicTacToe {
-  private parent: Player;
+  private parent: MemberInfo;
   private channel: TextChannel;
-  private guildMembers: { [memberId in string]: Player } = {};
   private gameMode: 'player' | 'cpu' = 'player';
   private cpuStrength: Strength | null = null;
   private parentIsFirst: boolean | null = null;
   private parentMark: Mark | null = null;
   private area: Area = [...defaultArea];
-  private opponent: Player | null = null;
+  private opponent: MemberInfo | null = null;
   private turnPlayerId = '';
 
   constructor(interaction: RepliableInteraction) {
-    this.parent = { id: interaction.user.id, ...memberInfo(interaction) };
+    this.parent = getMemberInfo(interaction);
     this.channel = interaction.channel as TextChannel;
-    const memberEntries = interaction.guild!.members.cache.map(
-      ({ id, displayAvatarURL, displayName }) => {
-        return [id, { id, name: displayName, iconURL: displayAvatarURL() }] as const;
-      },
-    );
-    this.guildMembers = Object.fromEntries(memberEntries);
   }
 
   public async noticeAlreadyInGame(interaction: RepliableInteraction) {
@@ -116,14 +104,14 @@ export class TicTacToe {
     return { content, components };
   }
 
-  public join(id: string) {
-    if (id === this.parent.id) {
+  public join(member: MemberInfo) {
+    if (member.id === this.parent.id) {
       throw new BotError('己との闘いってか？意味分かんないね');
     }
     if (this.opponent !== null) {
       throw new BotError(`${this.opponent.name}くんがおるんだよなあ...`);
     }
-    this.opponent = this.guildMembers[id];
+    this.opponent = { ...member };
     return { content: `${this.opponent.name}が参戦！`, components: [] };
   }
 

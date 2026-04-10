@@ -1,3 +1,4 @@
+import { MemberInfo } from '@/lib/utils';
 import { Area, game, Mark, TicTacToe } from '@/TicTacToe';
 import {
   ActionRowBuilder,
@@ -26,8 +27,8 @@ const registration = {
         .setCustomId('join')
         .setLabel(`${parentName}くんの対戦に参加する`)
         .setStyle(ButtonStyle.Primary),
-    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await interaction.update(ticTacToe.join(interaction.user.id));
+    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe, member: MemberInfo) {
+      await interaction.update(ticTacToe.join(member));
     },
   },
   startBattle: {
@@ -80,7 +81,12 @@ const registration = {
         .setStyle(bingo?.includes(gridIndex) ? ButtonStyle.Success : style[grid])
         .setDisabled(bingo !== undefined || area.every((g) => g !== 0));
     },
-    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe, gridIndex: number) {
+    async execute(
+      interaction: ButtonInteraction,
+      ticTacToe: TicTacToe,
+      member: MemberInfo,
+      gridIndex: number,
+    ) {
       await ticTacToe.putByPlayer(interaction, gridIndex);
     },
   },
@@ -113,10 +119,11 @@ type Registration = typeof registration;
 type AnyExecute = (
   interaction: ButtonInteraction,
   ticTacToe: TicTacToe,
+  memberInfo: MemberInfo,
   ...args: (string | number)[]
 ) => Promise<void>;
 
-export const buttonInteraction = async (interaction: ButtonInteraction) => {
+export const buttonInteraction = async (interaction: ButtonInteraction, memberInfo: MemberInfo) => {
   const ticTacToe = game.get(interaction);
   if (ticTacToe === null) {
     await interaction.reply({ content: '`/marubatsu`しようね', flags });
@@ -127,6 +134,7 @@ export const buttonInteraction = async (interaction: ButtonInteraction) => {
   await (registration[customId as ButtonKey].execute as AnyExecute)(
     interaction,
     ticTacToe,
+    memberInfo,
     ...numberedParams,
   );
 };
