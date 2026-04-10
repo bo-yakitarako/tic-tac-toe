@@ -27,7 +27,7 @@ const registration = {
         .setLabel(`${parentName}くんの対戦に参加する`)
         .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.join(interaction);
+      await interaction.update(ticTacToe.join(interaction.user.id));
     },
   },
   startBattle: {

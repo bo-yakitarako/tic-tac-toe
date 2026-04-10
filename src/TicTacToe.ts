@@ -10,6 +10,7 @@ import { makeButtonRow } from '@/components/buttons';
 import { buildEmbed, chunk, memberInfo, withIndex } from '@/lib/utils';
 import { minMax } from '@/lib/minMax';
 import { judge } from '@/lib/judgement';
+import { BotError } from '@/BotError';
 
 const channels: { [channelId in string]: TicTacToe } = {};
 export const game = {
@@ -59,6 +60,7 @@ type Judgement = ReturnType<typeof judge>;
 export class TicTacToe {
   private parent: Player;
   private channel: TextChannel;
+  private guildMembers: { [memberId in string]: Player } = {};
   private gameMode: 'player' | 'cpu' = 'player';
   private cpuStrength: Strength | null = null;
   private parentIsFirst: boolean | null = null;
@@ -70,6 +72,12 @@ export class TicTacToe {
   constructor(interaction: RepliableInteraction) {
     this.parent = { id: interaction.user.id, ...memberInfo(interaction) };
     this.channel = interaction.channel as TextChannel;
+    const memberEntries = interaction.guild!.members.cache.map(
+      ({ id, displayAvatarURL, displayName }) => {
+        return [id, { id, name: displayName, iconURL: displayAvatarURL() }] as const;
+      },
+    );
+    this.guildMembers = Object.fromEntries(memberEntries);
   }
 
   public async noticeAlreadyInGame(interaction: RepliableInteraction) {
@@ -108,18 +116,15 @@ export class TicTacToe {
     return { content, components };
   }
 
-  public async join(interaction: ButtonInteraction) {
-    if (interaction.user.id === this.parent.id) {
-      await interaction.reply({ content: '己との闘いってか？意味分かんないね', flags });
-      return;
+  public join(id: string) {
+    if (id === this.parent.id) {
+      throw new BotError('己との闘いってか？意味分かんないね');
     }
     if (this.opponent !== null) {
-      const content = `先に${this.opponent.name}くんがおるんだよなあ...`;
-      await interaction.reply({ content, flags });
-      return;
+      throw new BotError(`${this.opponent.name}くんがおるんだよなあ...`);
     }
-    this.opponent = { id: interaction.user.id, ...memberInfo(interaction) };
-    await interaction.update({ content: `${this.opponent.name}が参戦！`, components: [] });
+    this.opponent = this.guildMembers[id];
+    return { content: `${this.opponent.name}が参戦！`, components: [] };
   }
 
   public async startBattle(interaction: ButtonInteraction) {
