@@ -43,8 +43,7 @@ export class TicTacToe {
     this.gameMode = 'player';
     this.area = [...defaultArea];
     const content = `@here ${this.parent.name}のヤツが対戦相手を募集してんぞ！誰か来てくれー！`;
-    const channelMessage = { content, components: [makeButtonRow(['join', this.parent.name])] };
-    return { configMessage: this.configurationMessage, channelMessage };
+    return { content, components: [makeButtonRow(['join', this.parent.name])] };
   }
 
   public get configurationMessage() {
@@ -123,7 +122,6 @@ export class TicTacToe {
     this.opponent = null;
     this.gameMode = 'cpu';
     this.area = [...defaultArea];
-    return this.configurationMessage;
   }
 
   public setCpuStrength(strength: Strength) {
@@ -245,7 +243,6 @@ export class TicTacToe {
     if (member.id !== this.parent.id) {
       throw new BotError('あんたにゃ関係ねーよー？');
     }
-    return this.configurationMessage;
   }
 
   private toNextOnCpu() {
@@ -276,7 +273,7 @@ export class TicTacToe {
     return {
       bingo: judgement?.bingo,
       channelMessage: { embeds: [embed] },
-      followUpMessage: this.configurationMessage,
+      showConfig: true,
     };
   }
 

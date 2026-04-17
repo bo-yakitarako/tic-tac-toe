@@ -19,8 +19,8 @@ const registration = {
       .setLabel('誰かと対戦する')
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      const { configMessage, channelMessage } = ticTacToe.callOnEveryoneToJoin();
-      await interaction.update(configMessage);
+      const channelMessage = ticTacToe.callOnEveryoneToJoin();
+      await interaction.update(ticTacToe.configurationMessage);
       await (interaction.channel as TextChannel).send(channelMessage);
     },
   },
@@ -54,7 +54,8 @@ const registration = {
       .setLabel('CPUと対戦する')
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await interaction.update(ticTacToe.configureCpu());
+      ticTacToe.configureCpu();
+      await interaction.update(ticTacToe.configurationMessage);
     },
   },
   startWithCpu: {
@@ -100,8 +101,8 @@ const registration = {
       await interaction.update(boardUpdate);
       if (gameEnd) {
         await (interaction.channel as TextChannel).send(gameEnd.channelMessage);
-        if ('followUpMessage' in gameEnd) {
-          await interaction.followUp({ ...gameEnd.followUpMessage, flags });
+        if ('showConfig' in gameEnd) {
+          await interaction.followUp({ ...ticTacToe.configurationMessage, flags });
         }
       }
     },
@@ -113,7 +114,8 @@ const registration = {
         .setLabel(`${parentName}くんは終了処理のためにここを押してねー`)
         .setStyle(ButtonStyle.Secondary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe, member: MemberInfo) {
-      await interaction.reply({ ...ticTacToe.onBattleFinish(member), flags });
+      ticTacToe.onBattleFinish(member);
+      await interaction.reply({ ...ticTacToe.configurationMessage, flags });
       await interaction.message.edit({ embeds: interaction.message.embeds, components: [] });
     },
   },
