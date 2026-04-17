@@ -1,4 +1,5 @@
-import { game, Mark, Strength, TicTacToe } from '@/TicTacToe';
+import { Mark, Strength, TicTacToe } from '@/TicTacToe';
+import { game } from '@/game';
 import {
   ActionRowBuilder,
   MessageFlags,

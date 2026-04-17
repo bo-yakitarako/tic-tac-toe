@@ -1,4 +1,4 @@
-import { game } from '@/TicTacToe';
+import { game } from '@/game';
 import {
   ChatInputCommandInteraction,
   MessageFlags,
@@ -15,7 +15,7 @@ const registration = {
     execute: async (interaction: ChatInputCommandInteraction) => {
       const alreadyGame = game.get(interaction);
       if (alreadyGame !== null) {
-        await alreadyGame.noticeAlreadyInGame(interaction);
+        await interaction.reply({ content: alreadyGame.noticeAlreadyInGame(), flags });
         return;
       }
       const ticTacToe = game.create(interaction);
