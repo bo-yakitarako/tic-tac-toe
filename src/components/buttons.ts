@@ -1,4 +1,6 @@
-import { Area, game, Mark, TicTacToe } from '@/TicTacToe';
+import { MemberInfo } from '@/lib/utils';
+import { Area, Mark, TicTacToe } from '@/TicTacToe';
+import { game } from '@/game';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -17,7 +19,9 @@ const registration = {
       .setLabel('誰かと対戦する')
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.callOnEveryoneToJoin(interaction);
+      const { configMessage, channelMessage } = ticTacToe.callOnEveryoneToJoin();
+      await interaction.update(configMessage);
+      await (interaction.channel as TextChannel).send(channelMessage);
     },
   },
   join: {
@@ -26,8 +30,8 @@ const registration = {
         .setCustomId('join')
         .setLabel(`${parentName}くんの対戦に参加する`)
         .setStyle(ButtonStyle.Primary),
-    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.join(interaction);
+    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe, member: MemberInfo) {
+      await interaction.update(ticTacToe.join(member));
     },
   },
   startBattle: {
@@ -38,7 +42,10 @@ const registration = {
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!canStart),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.startBattle(interaction);
+      const message = ticTacToe.startBattle();
+      await interaction.deferUpdate();
+      await interaction.deleteReply();
+      await (interaction.channel as TextChannel).send(message);
     },
   },
   withCpu: {
@@ -47,7 +54,7 @@ const registration = {
       .setLabel('CPUと対戦する')
       .setStyle(ButtonStyle.Primary),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.configureCpu(interaction);
+      await interaction.update(ticTacToe.configureCpu());
     },
   },
   startWithCpu: {
@@ -58,7 +65,10 @@ const registration = {
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!canStart),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.startWithCpu(interaction);
+      const message = ticTacToe.startWithCpu();
+      await interaction.deferUpdate();
+      await interaction.deleteReply();
+      await (interaction.channel as TextChannel).send(message);
     },
   },
   grid: {
@@ -80,8 +90,20 @@ const registration = {
         .setStyle(bingo?.includes(gridIndex) ? ButtonStyle.Success : style[grid])
         .setDisabled(bingo !== undefined || area.every((g) => g !== 0));
     },
-    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe, gridIndex: number) {
-      await ticTacToe.putByPlayer(interaction, gridIndex);
+    async execute(
+      interaction: ButtonInteraction,
+      ticTacToe: TicTacToe,
+      member: MemberInfo,
+      gridIndex: number,
+    ) {
+      const { boardUpdate, gameEnd } = ticTacToe.putByPlayer(member, gridIndex);
+      await interaction.update(boardUpdate);
+      if (gameEnd) {
+        await (interaction.channel as TextChannel).send(gameEnd.channelMessage);
+        if ('followUpMessage' in gameEnd) {
+          await interaction.followUp({ ...gameEnd.followUpMessage, flags });
+        }
+      }
     },
   },
   onBattleEnd: {
@@ -90,8 +112,9 @@ const registration = {
         .setCustomId('onBattleEnd')
         .setLabel(`${parentName}くんは終了処理のためにここを押してねー`)
         .setStyle(ButtonStyle.Secondary),
-    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
-      await ticTacToe.onBattleFinish(interaction);
+    async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe, member: MemberInfo) {
+      await interaction.reply({ ...ticTacToe.onBattleFinish(member), flags });
+      await interaction.message.edit({ embeds: interaction.message.embeds, components: [] });
     },
   },
   finish: {
@@ -113,10 +136,11 @@ type Registration = typeof registration;
 type AnyExecute = (
   interaction: ButtonInteraction,
   ticTacToe: TicTacToe,
+  memberInfo: MemberInfo,
   ...args: (string | number)[]
 ) => Promise<void>;
 
-export const buttonInteraction = async (interaction: ButtonInteraction) => {
+export const buttonInteraction = async (interaction: ButtonInteraction, memberInfo: MemberInfo) => {
   const ticTacToe = game.get(interaction);
   if (ticTacToe === null) {
     await interaction.reply({ content: '`/marubatsu`しようね', flags });
@@ -127,6 +151,7 @@ export const buttonInteraction = async (interaction: ButtonInteraction) => {
   await (registration[customId as ButtonKey].execute as AnyExecute)(
     interaction,
     ticTacToe,
+    memberInfo,
     ...numberedParams,
   );
 };
@@ -136,7 +161,7 @@ type ButtonComponentBuilder<T extends ButtonKey> = Registration[T]['component'] 
 ) => ButtonBuilder
   ? [T, ...P]
   : [T];
-type ButtonInfoArg = {
+export type ButtonInfoArg = {
   [K in ButtonKey]: Registration[K]['component'] extends (...args: infer _P) => ButtonBuilder
     ? ButtonComponentBuilder<K>
     : K | ButtonComponentBuilder<K>;

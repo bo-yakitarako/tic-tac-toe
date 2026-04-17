@@ -1,41 +1,10 @@
-import {
-  ButtonInteraction,
-  EmbedBuilder,
-  MessageFlags,
-  RepliableInteraction,
-  TextChannel,
-} from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { makeSelectMenuRow, strengthTitle } from '@/components/selectMenu';
-import { makeButtonRow } from '@/components/buttons';
-import { buildEmbed, chunk, memberInfo, withIndex } from '@/lib/utils';
+import { ButtonInfoArg, makeButtonRow } from '@/components/buttons';
+import { buildEmbed, chunk, MemberInfo, withIndex } from '@/lib/utils';
 import { minMax } from '@/lib/minMax';
 import { judge } from '@/lib/judgement';
-
-const channels: { [channelId in string]: TicTacToe } = {};
-export const game = {
-  get({ channelId }: RepliableInteraction) {
-    if (channelId === null) {
-      return null;
-    }
-    return channels[channelId] ?? null;
-  },
-  create(interaction: RepliableInteraction) {
-    const { channelId } = interaction;
-    if (channelId === null) {
-      return null;
-    }
-    channels[channelId] = new TicTacToe(interaction);
-    return channels[channelId];
-  },
-  remove({ channelId }: RepliableInteraction) {
-    if (channelId === null) {
-      return;
-    }
-    delete channels[channelId];
-  },
-};
-
-const flags = MessageFlags.Ephemeral;
+import { BotError } from '@/BotError';
 
 type Grid = 0 | 1 | 2; // 0: まだ置かれてない, 1: 先手, 2: 後手
 export type Area = [Grid, Grid, Grid, Grid, Grid, Grid, Grid, Grid, Grid];
@@ -49,41 +18,33 @@ const properGridRatio: { [strength in Strength]: number } = {
   unbeatable: 1,
 };
 
-type Player = {
-  id: string;
-  name: string;
-  iconURL: string;
-};
 type Judgement = ReturnType<typeof judge>;
 
 export class TicTacToe {
-  private parent: Player;
-  private channel: TextChannel;
+  private parent: MemberInfo;
   private gameMode: 'player' | 'cpu' = 'player';
   private cpuStrength: Strength | null = null;
   private parentIsFirst: boolean | null = null;
   private parentMark: Mark | null = null;
   private area: Area = [...defaultArea];
-  private opponent: Player | null = null;
+  private opponent: MemberInfo | null = null;
   private turnPlayerId = '';
 
-  constructor(interaction: RepliableInteraction) {
-    this.parent = { id: interaction.user.id, ...memberInfo(interaction) };
-    this.channel = interaction.channel as TextChannel;
+  constructor(member: MemberInfo) {
+    this.parent = member;
   }
 
-  public async noticeAlreadyInGame(interaction: RepliableInteraction) {
-    const content = `このチャンネルでは既に${this.parent.name}くんが\`/marubatsu\`しちゃってるね\n終わるのを待つか、他のチャンネルで\`/marubatsu\`してみてねー`;
-    await interaction.reply({ content, flags });
+  public noticeAlreadyInGame() {
+    return `このチャンネルでは既に${this.parent.name}くんが\`/marubatsu\`しちゃってるね\n終わるのを待つか、他のチャンネルで\`/marubatsu\`してみてねー`;
   }
 
-  public async callOnEveryoneToJoin(interaction: ButtonInteraction) {
+  public callOnEveryoneToJoin() {
     this.opponent = null;
     this.gameMode = 'player';
     this.area = [...defaultArea];
-    await interaction.update(this.configurationMessage);
     const content = `@here ${this.parent.name}のヤツが対戦相手を募集してんぞ！誰か来てくれー！`;
-    await this.channel.send({ content, components: [makeButtonRow(['join', this.parent.name])] });
+    const channelMessage = { content, components: [makeButtonRow(['join', this.parent.name])] };
+    return { configMessage: this.configurationMessage, channelMessage };
   }
 
   public get configurationMessage() {
@@ -95,7 +56,7 @@ export class TicTacToe {
   private buildPlayerConfigurationMessage() {
     const isEnded = this.area.some((grid) => grid !== 0);
     let content = '対戦相手を募集すんぞぉ！おめえさんの番は何がいいか決めておこうな';
-    const buttons: Parameters<typeof makeButtonRow> = [['startBattle', this.canStart, isEnded]];
+    const buttons: ButtonInfoArg[] = [['startBattle', this.canStart, isEnded]];
     if (isEnded) {
       buttons.push('withPlayer', 'withCpu', 'finish');
       content = `この後はどうするー？\n他の人とやりたい場合は「誰かと対戦する」にしてねー`;
@@ -108,30 +69,31 @@ export class TicTacToe {
     return { content, components };
   }
 
-  public async join(interaction: ButtonInteraction) {
-    if (interaction.user.id === this.parent.id) {
-      await interaction.reply({ content: '己との闘いってか？意味分かんないね', flags });
-      return;
+  public join(member: MemberInfo) {
+    if (member.id === this.parent.id) {
+      throw new BotError('己との闘いってか？意味分かんないね');
     }
     if (this.opponent !== null) {
-      const content = `先に${this.opponent.name}くんがおるんだよなあ...`;
-      await interaction.reply({ content, flags });
-      return;
+      throw new BotError(`${this.opponent.name}くんがおるんだよなあ...`);
     }
-    this.opponent = { id: interaction.user.id, ...memberInfo(interaction) };
-    await interaction.update({ content: `${this.opponent.name}が参戦！`, components: [] });
+    this.opponent = { ...member };
+    return { content: `${this.opponent.name}が参戦！`, components: [] };
   }
 
-  public async startBattle(interaction: ButtonInteraction) {
+  public startBattle() {
     if (this.opponent === null) {
-      await interaction.reply({ content: 'ぼっち乙～ｗｗｗ', flags });
-      return;
+      throw new BotError('ぼっち乙～ｗｗｗ');
     }
     this.area = [...defaultArea];
-    await interaction.deferUpdate();
-    await interaction.deleteReply();
     this.turnPlayerId = this.parentIsFirst ? this.parent.id : this.opponent.id;
-    await this.channel.send(this.buildPlayerGameInfoMessage());
+    return this.buildPlayerGameInfoMessage();
+  }
+
+  public buildGameInfoMessage(bingo?: number[]) {
+    if (this.gameMode === 'player') {
+      return this.buildPlayerGameInfoMessage(bingo);
+    }
+    return this.buildCpuGameInfoMessage(bingo);
   }
 
   private buildPlayerGameInfoMessage(bingo?: number[]) {
@@ -150,17 +112,18 @@ export class TicTacToe {
   }
 
   private buildAreaComponents(bingo?: number[]) {
-    type Param = Parameters<typeof makeButtonRow>[0];
     return chunk(withIndex(this.area), 3).map((row) =>
-      makeButtonRow(...row.map<Param>(({ i }) => ['grid', this.area, i, this.firstMark, bingo])),
+      makeButtonRow(
+        ...row.map<ButtonInfoArg>(({ i }) => ['grid', this.area, i, this.firstMark, bingo]),
+      ),
     );
   }
 
-  public async configureCpu(interaction: ButtonInteraction) {
+  public configureCpu() {
     this.opponent = null;
     this.gameMode = 'cpu';
     this.area = [...defaultArea];
-    await interaction.update(this.configurationMessage);
+    return this.configurationMessage;
   }
 
   public setCpuStrength(strength: Strength) {
@@ -199,15 +162,13 @@ export class TicTacToe {
     return commonCondition && this.cpuStrength !== null;
   }
 
-  public async startWithCpu(interaction: ButtonInteraction) {
-    await interaction.deferUpdate();
-    await interaction.deleteReply();
+  public startWithCpu() {
     this.area = [...defaultArea];
     if (!this.parentIsFirst) {
       this.putByCpu();
     }
     this.turnPlayerId = this.parent.id;
-    await this.channel.send(this.buildCpuGameInfoMessage());
+    return this.buildCpuGameInfoMessage();
   }
 
   private putByCpu() {
@@ -240,36 +201,31 @@ export class TicTacToe {
     return this.parentMark === ':o:' ? ':x:' : ':o:';
   }
 
-  public async putByPlayer(interaction: ButtonInteraction, gridIndex: number) {
-    if (![this.parent.id, this.opponent?.id ?? ''].includes(interaction.user.id)) {
-      await interaction.reply({ content: '部外者は黙ってな', flags });
-      return;
+  public putByPlayer(member: MemberInfo, gridIndex: number) {
+    if (![this.parent.id, this.opponent?.id ?? ''].includes(member.id)) {
+      throw new BotError('部外者は黙ってな');
     }
-    if (interaction.user.id !== this.turnPlayerId) {
-      await interaction.reply({ content: 'おめえの番じゃねえど？', flags });
-      return;
+    if (member.id !== this.turnPlayerId) {
+      throw new BotError('おめえの番じゃねえど？');
     }
     if (this.area[gridIndex] !== 0) {
-      await interaction.reply({ content: '上書きやめてー？ダメだからね？', flags });
-      return;
+      throw new BotError('上書きやめてー？ダメだからね？');
     }
     this.area[gridIndex] = this.currentTurnGrid;
-    const judgement = judge(this.area);
-    if (this.opponent !== null) {
-      await this.toNextOnPlayer(interaction, judgement);
-    } else {
-      await this.toNextOnCpu(interaction, judgement);
-    }
+    const result = this.opponent !== null ? this.toNextOnPlayer() : this.toNextOnCpu();
+    return {
+      boardUpdate: this.buildGameInfoMessage(result?.bingo),
+      gameEnd: result ?? undefined,
+    };
   }
 
   /** このメソッドはthis.opponent !== nullの条件のもと呼ばれるのでthis.opponent!を使っておけ */
-  private async toNextOnPlayer(interaction: ButtonInteraction, judgement: Judgement) {
+  private toNextOnPlayer() {
+    const judgement = judge(this.area);
     if (judgement === null && this.hasEmpty) {
       this.turnPlayerId = this.parent.id === this.turnPlayerId ? this.opponent!.id : this.parent.id;
-      await interaction.update(this.buildPlayerGameInfoMessage());
-      return;
+      return null;
     }
-    await interaction.update(this.buildPlayerGameInfoMessage(judgement?.bingo));
     let embed = buildEmbed('引き分け！', '2人ともいい戦いだったぜ！');
     if (judgement !== null) {
       const { winner } = judgement;
@@ -281,41 +237,33 @@ export class TicTacToe {
       embed = buildEmbed(author, description, 'success');
     }
     const components = [makeButtonRow(['onBattleEnd', this.parent.name])];
-    await this.channel.send({ embeds: [embed], components });
+    const channelMessage = { embeds: [embed], components };
+    return { bingo: judgement?.bingo, channelMessage };
   }
 
-  public async onBattleFinish(interaction: ButtonInteraction) {
-    if (interaction.user.id !== this.parent.id) {
-      await interaction.reply({ content: 'あんたにゃ関係ねーよー？', flags });
-      return;
+  public onBattleFinish(member: MemberInfo) {
+    if (member.id !== this.parent.id) {
+      throw new BotError('あんたにゃ関係ねーよー？');
     }
-    await interaction.reply({ ...this.configurationMessage, flags });
-    await interaction.message.edit({ embeds: interaction.message.embeds, components: [] });
+    return this.configurationMessage;
   }
 
-  private async toNextOnCpu(interaction: ButtonInteraction, judgement: Judgement) {
+  private toNextOnCpu() {
+    let judgement = judge(this.area);
     if (judgement === null && this.hasEmpty) {
       this.putByCpu();
-      const nextJudgement = judge(this.area);
-      if (nextJudgement === null && this.hasEmpty) {
-        await interaction.update(this.buildCpuGameInfoMessage());
-      } else {
-        await this.cpuFinish(interaction, nextJudgement);
+      judgement = judge(this.area);
+      if (judgement === null && this.hasEmpty) {
+        return null;
       }
-      return;
     }
-    await this.cpuFinish(interaction, judgement);
+    return this.cpuFinish(judgement);
   }
 
-  private async cpuFinish(interaction: ButtonInteraction, judgement: Judgement) {
-    await interaction.deferUpdate();
-    await interaction.message.edit(this.buildCpuGameInfoMessage(judgement?.bingo));
+  private cpuFinish(judgement: Judgement) {
+    let embed: EmbedBuilder;
     if (judgement === null) {
-      const embed = buildEmbed(
-        '引き分け！',
-        'なかなかいい戦いだったぜ\nだが、次はこうは行けないぞ？',
-      );
-      await this.channel.send({ embeds: [embed] });
+      embed = buildEmbed('引き分け！', 'なかなかいい戦いだったぜ\nだが、次はこうは行けないぞ？');
     } else {
       const { winner } = judgement;
       const isWinParent = this.judgeParentWinning(winner);
@@ -323,10 +271,13 @@ export class TicTacToe {
       const description = isWinParent
         ? 'くっ...なかなかやるじゃねえか...！\n次は敗けねえぞ！'
         : 'うぇ乁( ˙ω˙ )厂ーい\n俺の勝ち～ｗｗｗｗｗｗｗｗｗｗ';
-      const embed = buildEmbed(title, description, isWinParent ? 'success' : 'failure');
-      await this.channel.send({ embeds: [embed] });
+      embed = buildEmbed(title, description, isWinParent ? 'success' : 'failure');
     }
-    await interaction.followUp({ ...this.configurationMessage, flags });
+    return {
+      bingo: judgement?.bingo,
+      channelMessage: { embeds: [embed] },
+      followUpMessage: this.configurationMessage,
+    };
   }
 
   private get currentTurnGrid() {

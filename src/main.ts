@@ -1,7 +1,9 @@
-import { Client, GatewayIntentBits, Events, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, Events, REST, Routes, MessageFlags } from 'discord.js';
 import { commands, slashCommandsInteraction } from '@/components/slashCommands';
 import { buttonInteraction } from '@/components/buttons';
 import { selectMenuInteraction } from '@/components/selectMenu';
+import { BotError } from '@/BotError';
+import { getMemberInfo } from '@/lib/utils';
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -19,16 +21,22 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!isReady) return;
-
-  if (interaction.isChatInputCommand()) {
-    await slashCommandsInteraction(interaction);
-  }
-  if (interaction.isButton()) {
-    await buttonInteraction(interaction);
-  }
-  if (interaction.isStringSelectMenu()) {
-    await selectMenuInteraction(interaction);
+  if (!isReady || !interaction.isRepliable()) return;
+  const memberInfo = getMemberInfo(interaction);
+  try {
+    if (interaction.isChatInputCommand()) {
+      await slashCommandsInteraction(interaction);
+    }
+    if (interaction.isButton()) {
+      await buttonInteraction(interaction, memberInfo);
+    }
+    if (interaction.isStringSelectMenu()) {
+      await selectMenuInteraction(interaction);
+    }
+  } catch (error) {
+    if (error instanceof BotError) {
+      await interaction.reply({ content: error.message, flags: MessageFlags.Ephemeral });
+    }
   }
 });
 

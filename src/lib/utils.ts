@@ -17,13 +17,18 @@ export function chunk<T>(array: T[], size: number): T[][] {
 }
 
 type NameArrange = (name: string) => string;
-export const memberInfo = ({ member, user }: RepliableInteraction, nameArrange?: NameArrange) => {
+export type MemberInfo = ReturnType<typeof getMemberInfo>;
+export const getMemberInfo = (
+  { member, user }: RepliableInteraction,
+  nameArrange?: NameArrange,
+) => {
+  const id = user.id;
   if (member instanceof GuildMember) {
     const name = nameArrange ? nameArrange(member.displayName) : member.displayName;
-    return { name, iconURL: member.displayAvatarURL() };
+    return { id, name, iconURL: member.displayAvatarURL() };
   }
   const name = nameArrange ? nameArrange(user.username) : user.username;
-  return { name, iconURL: user.displayAvatarURL() };
+  return { id, name, iconURL: user.displayAvatarURL() };
 };
 
 const colors = {
