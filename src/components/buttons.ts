@@ -42,9 +42,10 @@ const registration = {
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!canStart),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
+      const message = ticTacToe.startBattle();
       await interaction.deferUpdate();
       await interaction.deleteReply();
-      await (interaction.channel as TextChannel).send(ticTacToe.startBattle());
+      await (interaction.channel as TextChannel).send(message);
     },
   },
   withCpu: {
@@ -64,9 +65,10 @@ const registration = {
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!canStart),
     async execute(interaction: ButtonInteraction, ticTacToe: TicTacToe) {
+      const message = ticTacToe.startWithCpu();
       await interaction.deferUpdate();
       await interaction.deleteReply();
-      await (interaction.channel as TextChannel).send(ticTacToe.startWithCpu());
+      await (interaction.channel as TextChannel).send(message);
     },
   },
   grid: {
