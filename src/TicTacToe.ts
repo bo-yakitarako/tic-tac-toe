@@ -212,9 +212,7 @@ export class TicTacToe {
       throw new BotError('上書きやめてー？ダメだからね？');
     }
     this.area[gridIndex] = this.currentTurnGrid;
-    const judgement = judge(this.area);
-    const result =
-      this.opponent !== null ? this.toNextOnPlayer(judgement) : this.toNextOnCpu(judgement);
+    const result = this.opponent !== null ? this.toNextOnPlayer() : this.toNextOnCpu();
     return {
       boardUpdate: this.buildGameInfoMessage(result?.bingo),
       gameEnd: result ?? undefined,
@@ -222,7 +220,8 @@ export class TicTacToe {
   }
 
   /** このメソッドはthis.opponent !== nullの条件のもと呼ばれるのでthis.opponent!を使っておけ */
-  private toNextOnPlayer(judgement: Judgement) {
+  private toNextOnPlayer() {
+    const judgement = judge(this.area);
     if (judgement === null && this.hasEmpty) {
       this.turnPlayerId = this.parent.id === this.turnPlayerId ? this.opponent!.id : this.parent.id;
       return null;
@@ -249,7 +248,8 @@ export class TicTacToe {
     return this.configurationMessage;
   }
 
-  private toNextOnCpu(judgement: Judgement) {
+  private toNextOnCpu() {
+    let judgement = judge(this.area);
     if (judgement === null && this.hasEmpty) {
       this.putByCpu();
       judgement = judge(this.area);
