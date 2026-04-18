@@ -4,7 +4,7 @@ import { TicTacToe } from '@/TicTacToe';
 
 const channels: { [channelId in string]: TicTacToe } = {};
 export const game = {
-  get({ channelId }: { channelId: string | null }) {
+  get({ channelId }: RepliableInteraction) {
     if (channelId === null) {
       return null;
     }
@@ -18,7 +18,7 @@ export const game = {
     channels[channelId] = new TicTacToe(getMemberInfo(interaction));
     return channels[channelId];
   },
-  remove({ channelId }: { channelId: string | null }) {
+  remove({ channelId }: RepliableInteraction) {
     if (channelId === null) {
       return;
     }
