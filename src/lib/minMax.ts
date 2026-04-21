@@ -1,4 +1,4 @@
-import { Area } from '@/TicTacToe';
+import { Area } from '@/gameClasses/TicTacToe';
 import { judge } from '@/lib/judgement';
 
 // oxlint-disable-next-line complexity

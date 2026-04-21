@@ -1,4 +1,4 @@
-import { Area } from '@/TicTacToe';
+import { Area } from '@/gameClasses/TicTacToe';
 
 const SIZE = 3;
 
