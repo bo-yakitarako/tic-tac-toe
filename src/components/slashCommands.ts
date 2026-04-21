@@ -14,13 +14,8 @@ const registration = {
     data: new SlashCommandBuilder().setName('marubatsu').setDescription('マルバツゲームしようぜ'),
     execute: async (interaction: ChatInputCommandInteraction) => {
       const alreadyGame = game.get(interaction);
-      if (alreadyGame !== null) {
-        await interaction.reply({ content: alreadyGame.noticeAlreadyInGame(), flags });
-        return;
-      }
-      const ticTacToe = game.create(interaction);
-      if (ticTacToe === null) {
-        await interaction.reply({ content: 'ほ？', flags });
+      if (alreadyGame !== undefined) {
+        await interaction.reply({ content: alreadyGame.alreadyInGameMessage, flags });
         return;
       }
       const components = [makeButtonRow('withPlayer', 'withCpu')];

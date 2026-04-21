@@ -1,22 +1,23 @@
 import { RepliableInteraction } from 'discord.js';
 import { getMemberInfo } from '@/lib/utils';
-import { TicTacToe } from '@/TicTacToe';
+import { TicTacToe } from '@/gameClasses/TicTacToe';
+import { PlayerGame } from '@/gameClasses/PlayerGame';
+import { CpuGame } from '@/gameClasses/CpuGame';
 
 const channels: { [channelId in string]: TicTacToe } = {};
 export const game = {
   get({ channelId }: RepliableInteraction) {
     if (channelId === null) {
-      return null;
+      return undefined;
     }
-    return channels[channelId] ?? null;
+    return channels[channelId] ?? undefined;
   },
-  create(interaction: RepliableInteraction) {
-    const { channelId } = interaction;
-    if (channelId === null) {
-      return null;
-    }
-    channels[channelId] = new TicTacToe(getMemberInfo(interaction));
-    return channels[channelId];
+  create(interaction: RepliableInteraction, mode: 'player' | 'cpu', preInstance?: TicTacToe) {
+    const member = getMemberInfo(interaction);
+    const instance =
+      mode === 'player' ? new PlayerGame(member, preInstance) : new CpuGame(member, preInstance);
+    channels[interaction.channelId!] = instance;
+    return instance;
   },
   remove({ channelId }: RepliableInteraction) {
     if (channelId === null) {

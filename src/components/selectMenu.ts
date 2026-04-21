@@ -1,4 +1,5 @@
-import { Mark, Strength, TicTacToe } from '@/TicTacToe';
+import { Mark, TicTacToe } from '@/gameClasses/TicTacToe';
+import { CpuGame, Strength } from '@/gameClasses/CpuGame';
 import { game } from '@/game';
 import {
   ActionRowBuilder,
@@ -33,8 +34,10 @@ const registration = {
         .addOptions(options);
     },
     async execute(interaction: StringSelectMenuInteraction, ticTacToe: TicTacToe) {
-      ticTacToe.setCpuStrength(interaction.values[0] as Strength);
-      await interaction.update(ticTacToe.configurationMessage);
+      if (ticTacToe instanceof CpuGame) {
+        ticTacToe.setStrength(interaction.values[0] as Strength);
+      }
+      await interaction.update(ticTacToe.configMessage);
     },
   },
   selectParentTurn: {
@@ -53,7 +56,7 @@ const registration = {
     },
     async execute(interaction: StringSelectMenuInteraction, ticTacToe: TicTacToe) {
       ticTacToe.setParentIsFirst(interaction.values[0] as 'first' | 'second');
-      await interaction.update(ticTacToe.configurationMessage);
+      await interaction.update(ticTacToe.configMessage);
     },
   },
   selectParentMark: {
@@ -72,7 +75,7 @@ const registration = {
     },
     async execute(interaction: StringSelectMenuInteraction, ticTacToe: TicTacToe) {
       ticTacToe.setParentMark(interaction.values[0] as Mark);
-      await interaction.update(ticTacToe.configurationMessage);
+      await interaction.update(ticTacToe.configMessage);
     },
   },
 };
@@ -81,7 +84,7 @@ type CustomId = keyof typeof registration;
 
 export const selectMenuInteraction = async (interaction: StringSelectMenuInteraction) => {
   const ticTacToe = game.get(interaction);
-  if (ticTacToe === null) {
+  if (ticTacToe === undefined) {
     await interaction.reply({ content: '`/marubatsu`しようね', flags });
     return;
   }
